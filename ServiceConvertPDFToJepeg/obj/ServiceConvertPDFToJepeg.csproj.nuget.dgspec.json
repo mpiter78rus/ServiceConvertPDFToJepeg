@@ -1,0 +1,76 @@
+{
+  "format": 1,
+  "restore": {
+    "D:\\RiderProjects\\ServiceConvertPDFToJepeg\\ServiceConvertPDFToJepeg\\ServiceConvertPDFToJepeg.csproj": {}
+  },
+  "projects": {
+    "D:\\RiderProjects\\ServiceConvertPDFToJepeg\\ServiceConvertPDFToJepeg\\ServiceConvertPDFToJepeg.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "D:\\RiderProjects\\ServiceConvertPDFToJepeg\\ServiceConvertPDFToJepeg\\ServiceConvertPDFToJepeg.csproj",
+        "projectName": "ServiceConvertPDFToJepeg",
+        "projectPath": "D:\\RiderProjects\\ServiceConvertPDFToJepeg\\ServiceConvertPDFToJepeg\\ServiceConvertPDFToJepeg.csproj",
+        "packagesPath": "C:\\Users\\morgunov\\.nuget\\packages\\",
+        "outputPath": "D:\\RiderProjects\\ServiceConvertPDFToJepeg\\ServiceConvertPDFToJepeg\\obj\\",
+        "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages",
+          "C:\\Program Files (x86)\\Microsoft\\Xamarin\\NuGet\\"
+        ],
+        "configFilePaths": [
+          "C:\\Users\\morgunov\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Xamarin.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "net471"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net471": {
+            "targetAlias": "net471",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "net471": {
+          "targetAlias": "net471",
+          "dependencies": {
+            "Ghostscript.NET": {
+              "target": "Package",
+              "version": "[1.2.3, )"
+            },
+            "Microsoft.Extensions.Hosting": {
+              "target": "Package",
+              "version": "[5.0.0, )"
+            },
+            "Microsoft.Extensions.Hosting.WindowsServices": {
+              "target": "Package",
+              "version": "[5.0.0, )"
+            },
+            "Serilog.AspNetCore": {
+              "target": "Package",
+              "version": "[4.1.1-dev-00229, )"
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\5.0.300\\RuntimeIdentifierGraph.json"
+        }
+      },
+      "runtimes": {
+        "win-x64": {
+          "#import": []
+        }
+      }
+    }
+  }
+}
