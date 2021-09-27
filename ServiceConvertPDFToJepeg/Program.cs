@@ -1,4 +1,8 @@
 using System;
+using System.Collections.Generic;
+using System.Security.Cryptography.X509Certificates;
+using System.Security.Policy;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
@@ -10,6 +14,7 @@ namespace ServiceConvertPDFToJepeg
     {
         public static void Main(string[] args)
         {
+
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Debug()
                 .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
@@ -32,8 +37,8 @@ namespace ServiceConvertPDFToJepeg
             {
                 Log.CloseAndFlush();
             }
-            
-            
+
+
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>

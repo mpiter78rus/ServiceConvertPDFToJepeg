@@ -8,16 +8,32 @@ using Ghostscript.NET;
 using Ghostscript.NET.Rasterizer;
 using Microsoft.Extensions.Hosting;
 using System.Drawing.Imaging;
+using Microsoft.Extensions.Configuration;
 using Serilog;
 
 namespace ServiceConvertPDFToJepeg
 {
     public class Worker : BackgroundService
     {
-        private readonly Network _nwk = new Network();
-        int desired_dpi = 96;
-        string outputPdfPath = @"D:\tmpl\pdf output\";
-        GhostscriptVersionInfo gvi = new GhostscriptVersionInfo(@"C:\Program Files\gs\gs9.54.0\bin\gsdll64.dll");
+        public IConfigurationRoot Configuration { get; private set; }
+        private readonly Network _nwk;
+        GhostConvert _cvt;
+        public Worker(IHostEnvironment env)
+        {
+            var builder = new ConfigurationBuilder()
+                .SetBasePath(env.ContentRootPath)
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true)
+                .AddEnvironmentVariables();
+
+            this.Configuration = builder.Build();
+            int _port = int.Parse(Configuration.GetValue<string>("PORT", "8005"));
+            string _host = Configuration.GetValue<string>("HOST", "127.0.0.1");
+            string _outputPdfPath = Configuration.GetValue<string>("OUTPUTPDFPATH", "D:\\tmpl\\pdf output\\");
+            string _dllPath = Configuration.GetValue<string>("DLLGHOSTPATH", "C:\\Program Files\\gs\\gs9.54.0\\bin\\gsdll64.dl");
+            _nwk = new Network(_port, _host);
+            _cvt = new GhostConvert(_outputPdfPath, _dllPath);
+        }
         
         public override Task StartAsync(CancellationToken cancellationToken)
         {
@@ -48,21 +64,7 @@ namespace ServiceConvertPDFToJepeg
                     builder.Append(Encoding.Unicode.GetString(data, 0, bytes));
                 } while (handler.Available>0);
 
-                Log.Logger.Information(builder.ToString());
-                
-                /*using (var rasterizer = new GhostscriptRasterizer())
-                {
-                    rasterizer.Open(builder.ToString(), gvi, false);
-
-                    for (int pageNumber = 1; pageNumber <= rasterizer.PageCount; pageNumber++)
-                    {
-                        var pageFilePath = Path.Combine(outputPdfPath, $"{Guid.NewGuid()}-{pageNumber}.jpeg");
-                        var img = rasterizer.GetPage(desired_dpi, pageNumber);
-                        img.Save(pageFilePath, ImageFormat.Jpeg);
-                    
-                    }
-             
-                }*/
+                _cvt.ConvertPDF(builder.ToString());
                 
                 var message = "message received";
                 data = Encoding.Unicode.GetBytes(message);
