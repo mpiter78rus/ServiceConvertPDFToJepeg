@@ -1,13 +1,10 @@
-using System;
 using System.IO;
-using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Ghostscript.NET;
-using Ghostscript.NET.Rasterizer;
 using Microsoft.Extensions.Hosting;
-using System.Drawing.Imaging;
+using System.Net;
+using System.Text.Json;
 using Microsoft.Extensions.Configuration;
 using Serilog;
 
@@ -15,7 +12,7 @@ namespace ServiceConvertPDFToJepeg
 {
     public class Worker : BackgroundService
     {
-        public IConfigurationRoot Configuration { get; private set; }
+        public IConfigurationRoot Configuration { get; }
         private readonly Network _nwk;
         GhostConvert _cvt;
         public Worker(IHostEnvironment env)
@@ -26,25 +23,25 @@ namespace ServiceConvertPDFToJepeg
                 .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true)
                 .AddEnvironmentVariables();
 
-            this.Configuration = builder.Build();
-            int _port = int.Parse(Configuration.GetValue<string>("PORT", "8005"));
-            string _host = Configuration.GetValue<string>("HOST", "127.0.0.1");
+            Configuration = builder.Build();
             string _outputPdfPath = Configuration.GetValue<string>("OUTPUTPDFPATH", "D:\\tmpl\\pdf output\\");
             string _dllPath = Configuration.GetValue<string>("DLLGHOSTPATH", "C:\\Program Files\\gs\\gs9.54.0\\bin\\gsdll64.dl");
-            _nwk = new Network(_port, _host);
-            _cvt = new GhostConvert(_outputPdfPath, _dllPath);
+            int _dpi = int.Parse(Configuration.GetValue<string>("DPI", "96"));
+            string _httpHost = Configuration.GetValue<string>("HTTPHOST", "http://localhost:8888/");
+            _nwk = new Network(_httpHost);
+            _cvt = new GhostConvert(_outputPdfPath, _dllPath, _dpi);
         }
         
         public override Task StartAsync(CancellationToken cancellationToken)
         {
-            _nwk.ListenSocket.Listen(10);
+            _nwk.Listener.Start();
             Log.Logger.Information("The service has been launched");
             return base.StartAsync(cancellationToken);
         }
 
         public override Task StopAsync(CancellationToken cancellationToken)
         {
-            _nwk.ListenSocket.Close();
+            _nwk.Listener.Close();
             Log.Logger.Information("The service is closed");
             return base.StopAsync(cancellationToken);
         }
@@ -53,25 +50,29 @@ namespace ServiceConvertPDFToJepeg
         {
             while (!stoppingToken.IsCancellationRequested)
             {
-                var handler = await _nwk.ListenSocket.AcceptAsync();
-                var builder = new StringBuilder();
-                var bytes = 0;
-                var data = new byte[256];
-
-                do
-                {
-                    bytes = handler.Receive(data);
-                    builder.Append(Encoding.Unicode.GetString(data, 0, bytes));
-                } while (handler.Available>0);
-
-                _cvt.ConvertPDF(builder.ToString());
+                HttpListenerContext context = await _nwk.Listener.GetContextAsync();
+                HttpListenerRequest request = context.Request;
+                HttpListenerResponse response = context.Response;
                 
-                var message = "message received";
-                data = Encoding.Unicode.GetBytes(message);
-                handler.Send(data);
-                    
-                handler.Shutdown(SocketShutdown.Both);
-                handler.Close();   
+                Stream body = request.InputStream;
+                Encoding encoding = request.ContentEncoding;
+                StreamReader reader = new StreamReader(body, encoding);
+                
+                Data result = JsonSerializer.Deserialize<Data>(reader.ReadToEnd());
+
+                for (int i = 0; i < result.Paths.Count; i++)
+                {
+                   _cvt.ConvertPDF(result.Paths[i]); 
+                }
+                
+                byte[] responceData = Encoding.UTF8.GetBytes("OK");
+                response.ContentType = "text/html";
+                response.ContentEncoding = Encoding.UTF8;
+                response.ContentLength64 = responceData.LongLength;
+                Stream output = response.OutputStream;
+                await output.WriteAsync(responceData, 0, responceData.Length, stoppingToken);
+                output.Close();
+  
             }
             await ExecuteAsync(stoppingToken);
         }
